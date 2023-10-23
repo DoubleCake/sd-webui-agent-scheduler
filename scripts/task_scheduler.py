@@ -22,6 +22,11 @@ from agent_scheduler.task_runner import TaskRunner, get_instance
 from agent_scheduler.helpers import log, compare_components_with_ids, get_components_by_ids
 from agent_scheduler.db import init as init_db, task_manager, TaskStatus
 from agent_scheduler.api import regsiter_apis
+from agent_scheduler.uploader_utils import *
+
+
+
+
 
 task_runner: TaskRunner = None
 
@@ -419,8 +424,45 @@ def on_ui_tab(**_kwargs):
                             visible=False,
                             show_label=False,
                         )
+            with gr.Tab("上传模型",id =2, elem_id = "agent_scheduler_model_upload_tab"):
+                with gr.Row():
+                        with gr.Row():
+                            with gr.Column():
+                                model_type = gr.Dropdown(choices=model_type_choices,label="模型类型",value="Lora")
+                                with gr.Row():
+                                    model_newName = gr.Textbox(label="模型显示名称",placeholder="新名称(保持为空则不修改名称)")
+                                    model_file = gr.File(label="模型上传处",file_count="single",file_types=file_types_filter)
+                            preview_img = gr.Image(type="filepath")
+                btn_submit = gr.Button(value="提交", variant="primary")
+                tips= gr.HTML("Tips:上传流程:1.将上传模型拖入 模型上传处\n 2. 上传预览图(如无预览图则使用任意图像代替,之后再手动替换\n)")
+            with gr.Tab("个人信息验证",id=3,elem_id="agent_scheduler_userInfo"):
+                with gr.Row():
+                    pro= gr.Dropdown(choices=["灵妖","西游"])
+                    userName = gr.Textbox(label="账户名：")
+                    passward= gr.Textbox(label="密码：")
+                btnVerfica=gr.Button(value="验证是否正确(如账户密码错误,将无法正确的查询流程)" ,variant="primary")
+                gr.HTML(value="当前账号暂未进行验证，请验证后再使用.")
+
+
+
+
 
         # register event handlers
+        
+        model_file.upload(
+            upload_file,
+            inputs=[model_file],
+            outputs = [model_newName,tips],
+            show_progress="full",
+        )
+
+        btn_submit.click(
+            submit,
+            inputs=[model_type,model_file,preview_img],
+            outputs=[model_file,tips],
+        )
+
+
         status.change(
             fn=lambda x: None,
             _js="agent_scheduler_status_filter_changed",
