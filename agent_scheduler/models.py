@@ -48,7 +48,8 @@ class TaskModel(BaseModel):
         description="The time when the task was updated",
         default=None,
     )
-
+    created_by: Optional[str] = Field(title="task owerner ", default="TempleUser")
+    project: Optional[str] = Field(title="project name", default="persional")
 
 class Txt2ImgApiTaskArgs(StableDiffusionTxt2ImgProcessingAPI):
     checkpoint: Optional[str] = Field(

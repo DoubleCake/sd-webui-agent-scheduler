@@ -161,6 +161,7 @@ def regsiter_apis(app: App, task_runner: TaskRunner):
     def queue_status_api(limit: int = 20, offset: int = 0):
         current_task_id = progress.current_task
         total_pending_tasks = task_manager.count_tasks(status="pending")
+    
         pending_tasks = task_manager.get_tasks(status=TaskStatus.PENDING, limit=limit, offset=offset)
         position = offset
         parsed_tasks = []

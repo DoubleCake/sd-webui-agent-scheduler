@@ -28,10 +28,11 @@ export const createPendingTasksStore = (initialState: PendingTasksState) => {
   const { getState, setState, subscribe } = store;
 
   const actions: PendingTasksActions = { //定义了一系列状态和对象
+    //喜爱那个服务器发送了一个httpget请求，获取队列中的前1000个任务。
     refresh: async () => {
       return fetch('/agent-scheduler/v1/queue?limit=1000')
-        .then(response => response.json())
-        .then(setState);
+        .then(response => response.json()) //把数据解析为json格式
+        .then(setState); //set设置数据
     },
     pauseQueue: async () => {
       return fetch('/agent-scheduler/v1/queue/pause', { method: 'POST' })

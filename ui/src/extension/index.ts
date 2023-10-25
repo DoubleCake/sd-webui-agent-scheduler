@@ -86,12 +86,13 @@ const sharedGridOptions: GridOptions<Task> = {
   columnDefs: [
     {
       field: 'name',
-      headerName: 'Task Id 任务标签',
+      headerName: 'Task Id ',
       cellDataType: 'text',
       minWidth: 240,
       maxWidth: 240,
       pinned: 'left',
       rowDrag: true,
+      editable: false,
       valueGetter: ({ data }: ValueGetterParams<Task, string>) => data?.name ?? data?.id,
       cellClass: ({ data }: CellClassParams<Task, string>) => {
         if (data == null) return;
@@ -116,6 +117,25 @@ const sharedGridOptions: GridOptions<Task> = {
         }
         return classes;
       },
+    },
+    {
+      field:"created_by",
+      headerName:"创建人",
+      cellDataType:"text",
+      minWidth: 80,
+      maxWidth: 80,
+      pinned: 'left',
+      editable: false,
+      valueGetter: ({ data }: ValueGetterParams<Task, string>) => data?.created_by ?? "",
+    },
+    {
+      field:"project",
+      headerName:"项目",
+      cellDataType:"text",
+      minWidth: 80,
+      maxWidth: 80,
+      pinned: 'left',
+      valueGetter: ({ data }: ValueGetterParams<Task, string>) => data?.project ?? "",
     },
     {
       field: 'type',
@@ -602,7 +622,7 @@ function initPendingTab() {
       resumeButton.classList.add('hide', 'hidden');
     }
   };
-  store.subscribe(updateUiState);
+  store.subscribe(updateUiState); //订阅，如果store状态改变，则调用updateUiState
   updateUiState(store.getState());
 
   let lastHighlightedRow: RowNode<Task> | null;
@@ -790,14 +810,15 @@ function initPendingTab() {
       const colStateStr = JSON.stringify(colState);
       localStorage.setItem('agent_scheduler:queue_col_state', colStateStr);
     },
-    onGridReady: ({ api, columnApi }) => {
+    onGridReady: ({ api, columnApi }) => { //表格创建完成后的事情.
       // init quick search input
-      const searchInput = initSearchInput('#agent_scheduler_action_search');
+      const searchInput = initSearchInput('#agent_scheduler_action_search'); //初始化gradio的text框，画上搜索图标
       searchInput.addEventListener(
         'keyup',
         debounce(function () { api.setQuickFilter(this.value); }, 200)
-      );
+      ); //创建搜索框 输入完成后自动调整表格
 
+      //根据store.getState获取的内容更新表格的行数据
       const updateRowData = (state: ReturnType<typeof store.getState>) => {
         api.setRowData(state.pending_tasks);
 
@@ -807,11 +828,11 @@ function initPendingTab() {
             api.refreshCells({ rowNodes: [node], force: true });
           }
         }
-
         api.clearFocusedCell();
         columnApi.autoSizeAllColumns();
       };
-      store.subscribe(updateRowData);
+
+      store.subscribe(updateRowData); 
       updateRowData(store.getState());
 
       // restore col state
@@ -1062,7 +1083,7 @@ function initHistoryTab() {
       );
 
       const updateRowData = (state: ReturnType<typeof store.getState>) => {
-        api.setRowData(state.tasks);
+        api.setRowData(state.tasks); //tasks 是Task的列表，setRowData 表示整张表的数据
         api.clearFocusedCell();
         columnApi.autoSizeAllColumns();
       };
@@ -1076,8 +1097,9 @@ function initHistoryTab() {
         columnApi.applyColumnState({ state: colState, applyOrder: true });
       }
     },
+
     onSelectionChanged: ({ api }) => {
-      const [selected] = api.getSelectedRows();
+      const [selected] = api.getSelectedRows(); //获取选中的行
       resultTaskId.value = selected.id;
       resultTaskId.dispatchEvent(new Event('input', { bubbles: true }));
     },
@@ -1096,6 +1118,7 @@ function initHistoryTab() {
       });
     },
   };
+
   const eGridDiv = gradioApp().querySelector<HTMLDivElement>(
     '#agent_scheduler_history_tasks_grid'
   )!;

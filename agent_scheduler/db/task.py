@@ -45,6 +45,7 @@ class TaskStatus(str, Enum):
     INTERRUPTED = "interrupted"
 
 
+#参数已经在 TaskModel中被初始化，这里主要将数据的读取存储为 TaskTable的表格 和 Task类 两者之前互换。
 class Task(TaskModel):
     script_params: bytes = None
     params: str
@@ -72,6 +73,8 @@ class Task(TaskModel):
             bookmarked=table.bookmarked,
             created_at=table.created_at,
             updated_at=table.updated_at,
+            created_by = table.created_by,
+            project = table.project
         )
 
     def to_table(self):
@@ -87,10 +90,12 @@ class Task(TaskModel):
             status=self.status,
             result=self.result,
             bookmarked=self.bookmarked,
+            created_by = self.created_by,
+            project = self.project
         )
 
-
-class TaskTable(Base):
+#基于基类创建的数据表
+class TaskTable(Base): 
     __tablename__ = "task"
 
     id = Column(String(64), primary_key=True)
@@ -117,12 +122,16 @@ class TaskTable(Base):
         server_default=text("(datetime('now'))"),
         onupdate=text("(datetime('now'))"),
     )
+    created_by = Column(String(64), nullable=False)
+    project = Column(String(64), nullable=False)
 
     def __repr__(self):
         return f"Task(id={self.id!r}, type={self.type!r}, params={self.params!r}, status={self.status!r}, created_at={self.created_at!r})"
 
 
 class TaskManager(BaseTableManager):
+
+    #根据主键，从session中获取对应的表数据。基于Base类
     def get_task(self, id: str) -> Union[TaskTable, None]:
         session = Session(self.engine)
         try:
@@ -154,6 +163,7 @@ class TaskManager(BaseTableManager):
         finally:
             session.close()
 
+    ## 从当前数据库中获取所有的数据,并从 将taskTable 所有数据转存为task类的列表
     def get_tasks(
         self,
         type: str = None,

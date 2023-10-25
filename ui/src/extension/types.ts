@@ -13,7 +13,9 @@ export type Task = {
   editing?: boolean;
   created_at: number;
   updated_at: number;
+  //add 
   created_by: string;
+  project: string;
 };
 
 export type ResponseStatus = {
