@@ -162,6 +162,7 @@ class Script(scripts.Script):
             fn = self.wrap_register_ui_task()
             inputs = fn_block.inputs.copy()
             inputs.insert(0, self.checkpoint_dropdown)
+            ## 考虑
             args = dict(
                 fn=fn,
                 _js="submit_enqueue_img2img" if is_img2img else "submit_enqueue",
