@@ -12,7 +12,7 @@ export default defineConfig({
       },
     },
     lib: {
-      name: 'agent-scheduler',
+      name: 'agent-scheduler', 
       entry: 'src/extension/index.ts',
       fileName: 'javascript/extension',
       formats: ['es']

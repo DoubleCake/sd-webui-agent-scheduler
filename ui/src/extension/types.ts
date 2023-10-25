@@ -13,6 +13,7 @@ export type Task = {
   editing?: boolean;
   created_at: number;
   updated_at: number;
+  created_by: string;
 };
 
 export type ResponseStatus = {
@@ -35,3 +36,4 @@ export type ProgressResponse = {
   progress: number;
   queued: false;
 };
+

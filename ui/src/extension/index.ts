@@ -25,19 +25,21 @@ import './index.scss';
 
 let notyf: Notyf | undefined;
 
+
 declare global {
-  let opts: object;
-  function gradioApp(): HTMLElement;
-  function randomId(): string;
+  let opts: object; // 全局选项对象
+  function gradioApp(): HTMLElement; // Gradio 应用的根元素
+  function randomId(): string;// 定义了一个生成随机 ID的函数，但是
   function origRandomId(): string;
   function get_tab_index(name: string): number;
   function create_submit_args(args: any[]): any[];
   function requestProgress(
     id: string,
-    progressContainer: HTMLElement,
-    imagesContainer: HTMLElement,
-    onDone?: () => void,
-    onProgress?: (res: ProgressResponse) => void,
+    progressContainer: HTMLElement, //显示任务进度的元素容器
+    imagesContainer: HTMLElement, //显示任务图片的html容器
+    onDone?: () => void, //onDone的可选参数，当任务完成时执行的参数
+    onProgress?: (res: ProgressResponse) => void, //在任务进度更新时，执行的res回调函数，该回调函数的输入对象是ProgressResponse
+
   ): void;
   function onUiLoaded(callback: () => void): void;
   function notify(response: ResponseStatus): void;
@@ -70,6 +72,8 @@ const historyStore = createHistoryTasksStore({
 const samplers: string[] = [];
 const checkpoints: string[] = ['System'];
 
+//定义了一个通用的gridOptions，及 Task Queue 和 Task History中公共的部分
+
 const sharedGridOptions: GridOptions<Task> = {
   // default col def properties get applied to all columns
   defaultColDef: {
@@ -82,7 +86,7 @@ const sharedGridOptions: GridOptions<Task> = {
   columnDefs: [
     {
       field: 'name',
-      headerName: 'Task Id',
+      headerName: 'Task Id 任务标签',
       cellDataType: 'text',
       minWidth: 240,
       maxWidth: 240,
@@ -115,7 +119,8 @@ const sharedGridOptions: GridOptions<Task> = {
     },
     {
       field: 'type',
-      headerName: 'Type',
+      // headerName: 'Type',
+      headerName: '类型',
       minWidth: 80,
       maxWidth: 80,
       editable: false,
@@ -126,7 +131,9 @@ const sharedGridOptions: GridOptions<Task> = {
       hide: true,
     },
     {
-      headerName: 'Params',
+      headerName: '参数',
+
+      // headerName: 'Params',
       children: [
         {
           field: 'params.prompt',
@@ -249,6 +256,7 @@ const sharedGridOptions: GridOptions<Task> = {
   enableBrowserTooltips: true,
 };
 
+//找到一个搜索输入框，给它添加一些样式和功能，然后返回这个搜索输入框。 分别用于 设置 Task Queue 和 Task History两部分的搜索框
 function initSearchInput(selector: string) {
   const searchContainer = gradioApp().querySelector<HTMLDivElement>(selector);
   if (searchContainer == null) {
@@ -268,6 +276,7 @@ function initSearchInput(selector: string) {
   return searchInput;
 }
 
+//异步函数'notify'，用于显示通知消息，根据'response'对象中的成功状态来显示成功消息或者 错误消息。
 async function notify(response: ResponseStatus) {
   if (notyf == null) {
     const Notyf = await import('notyf');
@@ -289,18 +298,19 @@ window.origRandomId = window.randomId;
 
 function showTaskProgress(task_id: string, type: string | undefined, callback: () => void) {
   // delay progress request until the options loaded
-  if (Object.keys(opts).length === 0) {
-    setTimeout(() => showTaskProgress(task_id, type, callback), 500);
+  if (Object.keys(opts).length === 0) { //检查全局变量 opt的长度
+    setTimeout(() => showTaskProgress(task_id, type, callback), 500); //延迟500ms 再次加载
     return;
   }
 
   const args = extractArgs(requestProgress);
 
+  //task queue中右側的处理进度
   const gallery = gradioApp().querySelector<HTMLDivElement>(
     '#agent_scheduler_current_task_images'
   )!;
 
-  // A1111 version
+  // A1111 version 在右侧的gallery中显示处理的进度
   if (args.includes('progressbarContainer')) {
     requestProgress(task_id, gallery, gallery, callback);
   } else {
@@ -335,8 +345,12 @@ function showTaskProgress(task_id: string, type: string | undefined, callback: (
   window.randomId = window.origRandomId;
 }
 
+
 function initQueueHandler() {
+
   const getUiCheckpoint = (is_img2img: boolean) => {
+    //根据传入的is_img2img,判断去查找#txt2img_enqueue_wrapper 还是 #img2img_enqueue_wrapper 中的input内的第一个属性,即前端页面上的SD模型。
+    //获取当前页面上的sd模型
     const enqueue_wrapper_model = gradioApp().querySelector<HTMLInputElement>(
       `#${is_img2img ? 'img2img_enqueue_wrapper' : 'txt2img_enqueue_wrapper'} input`
     );
@@ -357,15 +371,19 @@ function initQueueHandler() {
   };
 
   const btnEnqueue = gradioApp().querySelector<HTMLButtonElement>('#txt2img_enqueue')!;
+
   window.submit_enqueue = (...args) => {
+
     const res = create_submit_args(args);
-    res[0] = getUiCheckpoint(false);
-    res[1] = randomId();
+    res[0] = getUiCheckpoint(false); //获取 txt2img的sd模型
+    res[1] = randomId(); 
     window.randomId = window.origRandomId;
 
     if (btnEnqueue != null) {
-      btnEnqueue.innerText = 'Queued';
-      setTimeout(() => {
+      // btnEnqueue.innerText = 'Queued==='; 
+
+      btnEnqueue.innerText = '====插入队列中Queued==='; 
+      setTimeout(() => { //延迟一段时间后执行修改名称
         btnEnqueue.innerText = 'Enqueue';
         if (!sharedStore.getState().uiAsTab) {
           if (sharedStore.getState().selectedTab === 'pending') {
@@ -446,7 +464,8 @@ function initQueueHandler() {
     img2imgPrompt.addEventListener('keydown', handleShortcut);
   }
 
-  // watch for current task id change
+  // 名为pendingStore的状态存储的变化。当存储中的current_task_id发生变化时，它会查找与新id匹配的任务，并显示该任务的进度。
+ // watch for current task id change
   pendingStore.subscribe((curr, prev) => {
     const id = curr.current_task_id;
     if (id !== prev.current_task_id && id != null) {
@@ -455,7 +474,7 @@ function initQueueHandler() {
     }
   });
 
-  // context menu
+  //在Ququq按钮上的 右键菜单
   const queueWithTaskName = (img2img = false) => {
     const name = prompt('Enter task name');
     window.randomId = () => name ?? window.origRandomId();
@@ -496,7 +515,9 @@ function initQueueHandler() {
   );
 }
 
+
 function initTabChangeHandler() {
+  //判断当前是 task 还是 history页面，并刷新当前页面。
   sharedStore.subscribe((curr, prev) => {
     if (!curr.uiAsTab || curr.selectedTab !== prev.selectedTab) {
       if (curr.selectedTab === 'pending') {
@@ -673,7 +694,7 @@ function initPendingTab() {
 
   // init grid
   const gridOptions: GridOptions<Task> = {
-    ...sharedGridOptions,
+    ...sharedGridOptions, // 将sharedGridOptions中的所有属性、方法都复制到当前对象
     editType: 'fullRow',
     defaultColDef: {
       ...sharedGridOptions.defaultColDef,
@@ -926,7 +947,7 @@ function initHistoryTab() {
     readOnlyEdit: true,
     defaultColDef: {
       ...sharedGridOptions.defaultColDef,
-      sortable: true,
+      // sortable: true, 
       editable: ({ colDef }) => colDef?.field === 'name',
     },
     // each entry here represents one column
@@ -1082,8 +1103,14 @@ function initHistoryTab() {
 }
 
 let agentSchedulerInitialized = false;
+
 onUiLoaded(function initAgentScheduler() {
   // delay ui init until dom is available
+
+  const buttonGenerate = gradioApp().querySelector<HTMLButtonElement>('#txt2img_generate')!;
+  buttonGenerate.innerText="niupi";
+  
+
   if (gradioApp().querySelector('#agent_scheduler_tabs') == null) {
     setTimeout(initAgentScheduler, 500);
     return;
@@ -1095,4 +1122,8 @@ onUiLoaded(function initAgentScheduler() {
   initPendingTab();
   initHistoryTab();
   agentSchedulerInitialized = true;
+
+  //display image generate
+
+
 });

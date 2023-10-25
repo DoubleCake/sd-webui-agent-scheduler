@@ -9,6 +9,7 @@ type PendingTasksState = {
   paused: boolean;
 };
 
+//列表中的控件状态
 type PendingTasksActions = {
   refresh: () => Promise<void>;
   pauseQueue: () => Promise<ResponseStatus>;
@@ -26,7 +27,7 @@ export const createPendingTasksStore = (initialState: PendingTasksState) => {
   const store = createStore<PendingTasksState>()(() => initialState);
   const { getState, setState, subscribe } = store;
 
-  const actions: PendingTasksActions = {
+  const actions: PendingTasksActions = { //定义了一系列状态和对象
     refresh: async () => {
       return fetch('/agent-scheduler/v1/queue?limit=1000')
         .then(response => response.json())
