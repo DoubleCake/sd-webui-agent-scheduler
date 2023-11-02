@@ -6,6 +6,8 @@ type SelectedTab = 'history' | 'pending';
 type SharedState = {
   uiAsTab: boolean;
   selectedTab: SelectedTab;
+  created_by?: string;
+  project?:string;
 };
 
 type SharedActions = {

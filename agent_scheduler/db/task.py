@@ -109,6 +109,7 @@ class TaskTable(Base):
     status = Column(
         String(20), nullable=False, default="pending"
     )  # pending, running, done, failed
+    
     result = Column(Text)  # task result
     bookmarked = Column(Boolean, nullable=True, default=False)
     created_at = Column(
@@ -173,9 +174,12 @@ class TaskManager(BaseTableManager):
         limit: int = None,
         offset: int = None,
         order: str = "asc",
+        created_by : str = None,
+        project: str = None,
     ) -> List[TaskTable]:
         session = Session(self.engine)
         try:
+            print(f"database:f{created_by}\n")
             query = session.query(TaskTable)
             if type:
                 query = query.filter(TaskTable.type == type)
@@ -188,6 +192,10 @@ class TaskManager(BaseTableManager):
 
             if api_task_id:
                 query = query.filter(TaskTable.api_task_id == api_task_id)
+            if created_by:
+                query = query.filter(TaskTable.created_by == created_by)
+            if project:
+                query = query.filter(TaskTable.project == project)
 
             if bookmarked == True:
                 query = query.filter(TaskTable.bookmarked == bookmarked)

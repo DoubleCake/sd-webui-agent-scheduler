@@ -14,8 +14,12 @@ from fastapi import Depends
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.exceptions import HTTPException
+import urllib
 
 from modules import shared, progress
+from modules import scripts
+user_file = os.path.join(scripts.basedir(), "user_info.json")
+
 
 from .db import Task, TaskStatus, task_manager
 from .models import (
@@ -26,10 +30,18 @@ from .models import (
     HistoryResponse,
     TaskModel,
     UpdateTaskArgs,
+    User,
 )
 from .task_runner import TaskRunner
 from .helpers import log, request_with_retry
 from .task_helpers import encode_image_to_base64, img2img_image_args_by_mode
+
+
+
+
+
+
+
 
 
 def api_callback(callback_url: str, task_id: str, status: TaskStatus, images: list):
@@ -184,7 +196,7 @@ def regsiter_apis(app: App, task_runner: TaskRunner):
         )
 
     @app.get("/agent-scheduler/v1/history", response_model=HistoryResponse, dependencies=deps)
-    def history_api(status: str = None, limit: int = 20, offset: int = 0):
+    def history_api(status: str = None, limit: int = 20, offset: int = 0,created_by: str = None,project:str = None):
         bookmarked = True if status == "bookmarked" else None
         if not status or status == "all" or bookmarked:
             status = [
@@ -200,6 +212,8 @@ def regsiter_apis(app: App, task_runner: TaskRunner):
             limit=limit,
             offset=offset,
             order="desc",
+            created_by=created_by,
+            project=project,
         )
         parsed_tasks = []
         for task in tasks:
@@ -207,7 +221,11 @@ def regsiter_apis(app: App, task_runner: TaskRunner):
             task_data = task.dict()
             task_data["params"] = params
             parsed_tasks.append(TaskModel(**task_data))
-
+        if created_by== "" or created_by is None:
+            return HistoryResponse(
+                total=0,
+                tasks=[],
+            )       
         return HistoryResponse(
             total=total,
             tasks=parsed_tasks,
@@ -451,3 +469,20 @@ def regsiter_apis(app: App, task_runner: TaskRunner):
         return {"success": True, "message": "History cleared."}
 
     task_runner.on_task_finished(on_task_finished)
+
+    @app.post("/agent-scheduler/v1/queue/verfy",dependencies=deps)
+
+    # def verify_userInfor(user:User):
+    def verify_userInfor(created_by:str,password:str,project:str):
+        print(f"==>api {created_by} {project} {password}")
+        with open(user_file,"r",encoding="utf8") as f:
+            user_infos = json.load(f)
+
+        # pro_chinese=urllib.parse.unquote(project)
+        passwordTmp =  user_infos.get(project).get(created_by)
+        if passwordTmp == password:
+            return {"success": True, "message": " 登录成功 cleared."}
+
+        else:
+            return {"success": False, "message": " 账户信息错误~！"}
+

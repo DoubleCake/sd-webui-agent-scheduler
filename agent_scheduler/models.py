@@ -131,3 +131,8 @@ class UpdateTaskArgs(BaseModel):
     params: Optional[Dict[str, Any]] = Field(
         title="Task Parameters", description="The parameters of the task in JSON format"
     )
+
+class User(BaseModel):
+    username: Optional[str] = Field(title="user name")
+    project:Optional[str] = Field(title="project name")
+    password: Optional[str] = Field(title="user password")

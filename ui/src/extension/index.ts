@@ -23,6 +23,7 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import 'notyf/notyf.min.css';
 import './index.scss';
 
+
 let notyf: Notyf | undefined;
 
 
@@ -48,7 +49,12 @@ declare global {
   function submit_enqueue(...args: any[]): any[];
   function submit_enqueue_img2img(...args: any[]): any[];
   function agent_scheduler_status_filter_changed(value: string): void;
+  // function agent_scheduler_project_user_change(username:string, password:string, project:string):any[];
+  function agent_scheduler_project_user_change(...args: any[]): any[];
+
   function appendContextMenuOption(selector: string, label: string, callback: () => void): void;
+  function verfyUserInfor(...args: any[]):void;
+  // function verfyUserInfor(user:string,password:string,project:string ):void;
 }
 
 const sharedStore = createSharedStore({
@@ -389,19 +395,44 @@ function initQueueHandler() {
     );
     return setting_sd_model?.value ?? 'Current Checkpoint';
   };
+  // const txtDropInput= gradioApp().querySelector('#txt2img_project')?.getElementsByTagName('input')[0];
 
-  const btnEnqueue = gradioApp().querySelector<HTMLButtonElement>('#txt2img_enqueue')!;
+  const getUiUserName = (is_img2img:boolean)=>{
+    const txt2img_user = gradioApp().querySelector<HTMLInputElement>(       
+      `#${is_img2img ? 'img2img_username' : 'txt2img_username'} input`
+    );
+    if(txt2img_user !=null){
+      const va = txt2img_user.value
+      return va
+    }
+    return "wupng_fail";
+  };
+  const getUiProject = (is_img2img:boolean)=>{
+    const project = gradioApp().querySelector<HTMLInputElement>(       
+      `#${is_img2img ? 'img2img_project' : 'txt2img_project'} input`
+    );
+    if(project !=null){
+      const va = project.value
+      return va
+    }
+    return "wupng_fail";
+  };
+
+  const btnEnqueue = gradioApp().querySelector<HTMLButtonElement>('#txt2img_enqueue input')!;
+
+
 
   window.submit_enqueue = (...args) => {
 
     const res = create_submit_args(args);
-    res[0] = getUiCheckpoint(false); //获取 txt2img的sd模型
-    res[1] = randomId(); 
+    res[0]=getUiUserName(false)
+    res[1]=getUiProject(false);
+    res[2] = getUiCheckpoint(false); //获取 txt2img的sd模型
+    res[3] = randomId(); 
     window.randomId = window.origRandomId;
 
     if (btnEnqueue != null) {
       // btnEnqueue.innerText = 'Queued==='; 
-
       btnEnqueue.innerText = '====插入队列中Queued==='; 
       setTimeout(() => { //延迟一段时间后执行修改名称
         btnEnqueue.innerText = 'Enqueue';
@@ -416,12 +447,18 @@ function initQueueHandler() {
     return res;
   };
 
+  // window.verfyUserInfor=()=>{};
   const btnImg2ImgEnqueue = gradioApp().querySelector<HTMLButtonElement>('#img2img_enqueue')!;
   window.submit_enqueue_img2img = (...args) => {
     const res = create_submit_args(args);
-    res[0] = getUiCheckpoint(true);
-    res[1] = randomId();
-    res[2] = get_tab_index('mode_img2img');
+
+
+    res[0]=getUiUserName(true)
+    res[1]=getUiProject(true)
+
+    res[2] = getUiCheckpoint(true);
+    res[3] = randomId();
+    res[4] = get_tab_index('mode_img2img');
     window.randomId = window.origRandomId;
 
     if (btnImg2ImgEnqueue != null) {
@@ -712,7 +749,7 @@ function initPendingTab() {
     updatePageMoveTimeout(api, pixel);
   };
 
-  // init grid
+  // init  pending grid
   const gridOptions: GridOptions<Task> = {
     ...sharedGridOptions, // 将sharedGridOptions中的所有属性、方法都复制到当前对象
     editType: 'fullRow',
@@ -922,13 +959,16 @@ function initPendingTab() {
 }
 
 function initHistoryTab() {
+  //初始化页面 样式 和 功能绑定
   const store = historyStore;
 
   // init actions
   const refreshButton = gradioApp().querySelector<HTMLButtonElement>(
     '#agent_scheduler_action_refresh_history'
   )!;
+
   refreshButton.addEventListener('click', () => store.refresh());
+
   const clearButton = gradioApp().querySelector<HTMLButtonElement>(
     '#agent_scheduler_action_clear_history'
   )!;
@@ -946,6 +986,9 @@ function initHistoryTab() {
   const resultGallery = gradioApp().querySelector<HTMLDivElement>(
     '#agent_scheduler_history_gallery'
   )!;
+
+
+
   resultGallery.addEventListener('click', e => {
     const target = e.target as Element | null;
     if (target?.tagName === 'IMG') {
@@ -958,11 +1001,55 @@ function initHistoryTab() {
     }
   });
 
+  
   window.agent_scheduler_status_filter_changed = value => {
     store.onFilterStatus(value?.toLowerCase() as TaskStatus | undefined);
   };
 
-  // init grid
+  // 同步 txt2img 和 img 2 img中的内容获取控件元素中的文本框元素
+  const txt2img_userName =gradioApp().querySelector('#txt2img_username')?.getElementsByTagName('input')[0];
+  const txtDropInput = gradioApp().querySelector('#txt2img_project')?.querySelector('input');
+  const text2img_password = gradioApp().querySelector('#txt2img_password')?.querySelector('input');
+
+  window.agent_scheduler_project_user_change= (...args) => {
+    //args中的是三个数值。但是可能存在的问题是 
+    var user=txt2img_userName?.value ;
+    var project =txtDropInput?.value;
+    var password=  text2img_password?.value;
+    args[0]=user;
+    args[1] = password;
+    args[2] = project;
+    console.log("ubdex.tx"+args)
+    store.verifyProjectAndCreatedBy(args[0], args[1], args[2]).then( notify);
+    return args;
+  }
+
+  // window.agent_scheduler_project_user_change=async (created_by,project) =>{
+  //   store.setProjectAndCreatedBy(created_by,project);
+  // };
+
+  // bookmarkTask: async (id: string, bookmarked: boolean) => {
+  //   return fetch(`/agent-scheduler/v1/task/${id}/${bookmarked ? 'bookmark' : 'unbookmark'}`, {
+  //     method: 'POST',
+  //   }).then(response => response.json());
+  // },
+  // renameTask: async (id: string, name: string) => {
+  //   return fetch(`/agent-scheduler/v1/task/${id}/rename?name=${encodeURIComponent(name)}`, {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //   }).then(response => response.json());
+  // },
+  // requeueTask: async (id: string) => {
+  //   return fetch(`/agent-scheduler/v1/task/${id}/requeue`, { method: 'POST' }).then(response =>
+  //     response.json()
+  //   );
+  // requeueTask: async (id: string) => {
+    // return fetch(`/agent-scheduler/v1/task/${id}/requeue`, { method: 'POST' })
+  // },
+  // window.verfyUserInfor= async (user:string,password:string,project:string )=>{
+
+
+  // init history grid
   const gridOptions: GridOptions<Task> = {
     ...sharedGridOptions,
     readOnlyEdit: true,
@@ -1147,6 +1234,8 @@ onUiLoaded(function initAgentScheduler() {
   agentSchedulerInitialized = true;
 
   //display image generate
+
+  
 
 
 });

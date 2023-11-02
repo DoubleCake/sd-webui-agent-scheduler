@@ -19,6 +19,7 @@ type PendingTasksActions = {
   moveTask: (id: string, overId: string) => Promise<ResponseStatus>;
   updateTask: (id: string, task: Task) => Promise<ResponseStatus>;
   deleteTask: (id: string) => Promise<ResponseStatus>;
+
 };
 
 export type PendingTasksStore = ReturnType<typeof createPendingTasksStore>;

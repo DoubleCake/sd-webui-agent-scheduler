@@ -264,6 +264,8 @@ class TaskRunner:
         is_img2img: bool,
         *args,
         checkpoint: str = None,
+        create_by: str = "tempPerson",
+        project : str =None,
         task_name: str = None,
         request: gr.Request = None,
     ):
@@ -271,7 +273,7 @@ class TaskRunner:
 
         vae = shared.opts.sd_vae
 
-        (params, script_args) = self.__serialize_ui_task_args(
+        (params, script_args) = self.__serialize_ui_task_args( #从列表包装为 字典型
             is_img2img, *args, checkpoint=checkpoint, vae=vae, request=request
         )
 
@@ -282,9 +284,10 @@ class TaskRunner:
             type=task_type,
             params=params,
             script_params=script_args,
+            created_by=create_by,
+            project=project
         )
         task_manager.add_task(task)
-
         self.__run_callbacks("task_registered", task_id, is_img2img=is_img2img, is_ui=True, args=params)
         self.__total_pending_tasks += 1
 
