@@ -48,7 +48,8 @@ placement_under_generate = "Under Generate button"
 placement_between_prompt_and_generate = "Between Prompt and Generate button"
 
 task_filter_choices = ["All", "Bookmarked", "Done", "Failed", "Interrupted"]
-
+project_choices=["tianlong","lingyao"]
+project_choices_chinese=["天龙","灵妖"]
 is_macos = platform.system() == "Darwin"
 enqueue_key_modifiers = [
     "Command" if is_macos else "Ctrl",
@@ -81,8 +82,16 @@ class Script(scripts.Script):
         self.checkpoint_override = checkpoint_current
         self.generate_button = None
         self.enqueue_row = None
+        self.user_accordion=None
         self.checkpoint_dropdown = None
+        self.project_dropdown=None
+        self.user_name=None
+        self.user_password = None
+        self.verifyButton = None
         self.submit_button = None
+
+
+
 
     def title(self):
         return "Agent Scheduler"
@@ -98,11 +107,13 @@ class Script(scripts.Script):
         neg_id = "txt2img_neg_prompt" if self.is_txt2img else "img2img_neg_prompt"
 
         if component.elem_id == generate_id:
-            self.generate_button = component
+
+
+            self.generate_button = component 
             if getattr(shared.opts, "queue_button_placement", placement_under_generate) == placement_under_generate:
                 self.add_enqueue_button()
                 component.parent.children.pop()
-                component.parent.parent.add(self.enqueue_row)
+                component.parent.parent.add(self.enqueue_row) #add row affter  text2img_generate_box
             return
 
         if (
@@ -114,10 +125,49 @@ class Script(scripts.Script):
             self.add_enqueue_button()
             component.parent.children.pop()
             toprow.add(self.enqueue_row)
+ 
 
     def on_app_started(self, block):
         if self.generate_button is not None:
+            # 将 txt2img_generate / img2img_generate 和 enqueue_button 绑定到一起。
             self.bind_enqueue_button(block)
+
+
+    def add_user_interaction(self,id_part):
+        with gr.Accordion(label="个人信息验证", elem_id = f"{id_part}_user_accordion")  as  self.user_accordion:
+            self.user_name = gr.Textbox(label="账户名",
+                                        max_lines=1,
+                                        placeholder ="用户名",
+                                        min_width=0,
+                                        elem_id = f"{id_part}_username",
+                                        )
+            self.project_dropdown = gr.Dropdown(
+                choices=project_choices_chinese,
+                show_label=False,
+                interactive=True,
+                elem_id = f"{id_part}_project"
+                )
+            self.user_password=  gr.Textbox(label="密码",
+                                        max_lines=1,
+                                        placeholder ="密码",
+                                        min_width=0,
+                                        elem_id = f"{id_part}_password",
+                                        )
+            self.verifyButton= gr.Button(value="点击进行账户验证",
+                                        elem_id =f"{id_part}_verifybtn",
+                                        variant="primary")
+
+            def fn (user_name,user_password,project_dropdown):
+                print(f"user verfy:{user_name},{user_password},{project_dropdown}")
+            
+            #点击后，发送请求get到本地，本地会根据数据库中的匹配信息，返回值，根据返回的信息，使用js代码，调整UI的颜色即可。
+            self.verifyButton.click(
+                fn=fn,
+                _js="agent_scheduler_project_user_change",
+                inputs=[self.user_name,self.user_password,self.project_dropdown],
+        )
+
+
 
     def add_enqueue_button(self):
         id_part = "img2img" if self.is_img2img else "txt2img"
@@ -131,6 +181,9 @@ class Script(scripts.Script):
                 interactive=True,
                 visible=not hide_checkpoint,
             )
+
+            self.add_user_interaction(id_part)
+
             if not hide_checkpoint:
                 create_refresh_button(
                     self.checkpoint_dropdown,
@@ -141,10 +194,10 @@ class Script(scripts.Script):
             self.submit_button = gr.Button("Enqueue", elem_id=f"{id_part}_enqueue", variant="primary")
 
     def bind_enqueue_button(self, root: gr.Blocks):
-        generate = self.generate_button
+        generate = self.generate_button 
         is_img2img = self.is_img2img
         dependencies: List[dict] = [
-            x for x in root.dependencies if x["trigger"] == "click" and generate._id in x["targets"]
+            x for x in root.dependencies if x["trigger"] == "click" and generate._id in x["targets"] #
         ]
 
         dependency: dict = None
@@ -164,11 +217,22 @@ class Script(scripts.Script):
         with root:
             if self.checkpoint_dropdown is not None:
                 self.checkpoint_dropdown.change(fn=self.on_checkpoint_changed, inputs=[self.checkpoint_dropdown])
-
+    
+            # fns .append("") 就是root下所有的函数
             fn_block = next(fn for fn in root.fns if compare_components_with_ids(fn.inputs, dependency["inputs"]))
-            fn = self.wrap_register_ui_task()
-            inputs = fn_block.inputs.copy()
+
+            fn = self.wrap_register_ui_task() # 调整使用了参数的部分。
+            
+            inputs = fn_block.inputs.copy()    #复制了txt2img 或者  img2img 部分的 输入参数。
             inputs.insert(0, self.checkpoint_dropdown)
+            inputs.insert(0, self.user_name)
+            inputs.insert(0, self.project_dropdown)
+
+
+#  config: a dictionary containing the configuration of the Blocks.
+#         fns: a list of functions that are used in the Blocks. Must be in the same order as the dependencies in the config.
+# dependency 包含了 inputs 、outputs、preprocess、postprocess等。
+            
             args = dict(
                 fn=fn,
                 _js="submit_enqueue_img2img" if is_img2img else "submit_enqueue",
@@ -181,7 +245,7 @@ class Script(scripts.Script):
 
             if cnet_dependency is not None:
                 cnet_fn_block = next(
-                    fn for fn in root.fns if compare_components_with_ids(fn.inputs, cnet_dependency["inputs"])
+                    fn for fn in root.fns if compare_components_with_ids(fn.inputs, cnet_dependency["inputs"]) #计算函数的参数输入
                 )
                 self.submit_button.click(
                     fn=UiControlNetUnit,
@@ -191,15 +255,17 @@ class Script(scripts.Script):
                 )
 
     def wrap_register_ui_task(self):
+
         def f(request: gr.Request, *args):
             if len(args) == 0:
                 raise Exception("Invalid call")
+            created_by = args[0]
+            project=args[1] 
+            checkpoint: str = args[2]
+            task_id = args[3]
 
-            checkpoint: str = args[0]
-            task_id = args[1]
-            args = args[1:]
+            args = args[3:]
             task_name = None
-
             if task_id == queue_with_every_checkpoints:
                 task_id = str(uuid4())
                 checkpoint = list_checkpoint_tiles()
@@ -225,8 +291,11 @@ class Script(scripts.Script):
                     self.is_img2img,
                     *args,
                     checkpoint=c,
+                    project=project,
+                    create_by=created_by,
                     task_name=task_name,
                     request=request,
+
                 )
 
             task_runner.execute_pending_tasks_threading()
@@ -545,13 +614,13 @@ def on_ui_tab(**_kwargs):
                             preview_img = gr.Image(type="filepath")
                 btn_submit = gr.Button(value="提交", variant="primary")
                 tips= gr.HTML("Tips:上传流程:1.将上传模型拖入 模型上传处\n 2. 上传预览图(如无预览图则使用任意图像代替,之后再手动替换\n)")
-            with gr.Tab("个人信息验证",id=3,elem_id="agent_scheduler_userInfo"):
-                with gr.Row():
-                    pro= gr.Dropdown(choices=["灵妖","西游"])
-                    userName = gr.Textbox(label="账户名：")
-                    passward= gr.Textbox(label="密码：")
-                btnVerfica=gr.Button(value="验证是否正确(如账户密码错误,将无法正确的查询流程)" ,variant="primary")
-                gr.HTML(value="当前账号暂未进行验证，请验证后再使用.")
+            # with gr.Tab("个人信息验证",id=3,elem_id="agent_scheduler_userInfo"):
+            #     with gr.Row():
+            #         pro= gr.Dropdown(choices=["灵妖","西游"])
+            #         userName = gr.Textbox(label="账户名：")
+            #         passward= gr.Textbox(label="密码：")
+            #     btnVerfica=gr.Button(value="验证是否正确(如账户密码错误,将无法正确的查询流程)" ,variant="primary")
+            #     gr.HTML(value="当前账号暂未进行验证，请验证后再使用.")
 
 
         # register event handlers
@@ -569,7 +638,7 @@ def on_ui_tab(**_kwargs):
             outputs=[model_file,tips],
         )
 
-
+        
         status.change(
             fn=lambda x: None,
             _js="agent_scheduler_status_filter_changed",

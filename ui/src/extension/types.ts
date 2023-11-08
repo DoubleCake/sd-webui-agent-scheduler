@@ -1,5 +1,7 @@
 export type TaskStatus = 'pending' | 'running' | 'done' | 'failed' | 'interrupted' | 'saved';
 
+
+
 export type Task = {
   id: string;
   api_task_id?: string;
@@ -13,6 +15,9 @@ export type Task = {
   editing?: boolean;
   created_at: number;
   updated_at: number;
+  //add 
+  created_by: string;
+  project: string;
 };
 
 export type ResponseStatus = {
@@ -23,6 +28,7 @@ export type ResponseStatus = {
 export type TaskHistoryResponse = {
   tasks: Task[];
   total: number;
+
 };
 
 export type ProgressResponse = {
@@ -35,3 +41,4 @@ export type ProgressResponse = {
   progress: number;
   queued: false;
 };
+

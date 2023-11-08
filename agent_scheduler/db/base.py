@@ -19,9 +19,11 @@ else:
 print(f"Using sqlite file: {db_file}")
 
 
-Base = declarative_base()
+Base = declarative_base() #定义一个基类
 metadata: MetaData = Base.metadata
 
+
+#创建一个db-file数据库，并进行链接
 class BaseTableManager:
     def __init__(self, engine = None):
         # Get the db connection object, making the file and tables if needed.
