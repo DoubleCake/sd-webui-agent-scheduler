@@ -191,7 +191,7 @@ class Script(scripts.Script):
                     lambda: {"choices": get_checkpoint_choices()},
                     f"refresh_{id_part}_checkpoint",
                 )
-            self.submit_button = gr.Button("Enqueue", elem_id=f"{id_part}_enqueue", variant="primary")
+            self.submit_button = gr.Button("排队生成", elem_id=f"{id_part}_enqueue", variant="primary")
 
     def bind_enqueue_button(self, root: gr.Blocks):
         generate = self.generate_button 
@@ -459,7 +459,7 @@ def on_ui_tab(**_kwargs):
                                 "Pause",
                                 elem_id="agent_scheduler_action_pause",
                                 variant="stop",
-                                visible=not paused,
+                                visible=True,
                             )
                             gr.Button(
                                 "Resume",

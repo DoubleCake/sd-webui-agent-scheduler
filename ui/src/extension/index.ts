@@ -651,11 +651,11 @@ function initPendingTab() {
   refreshButton.addEventListener('click', () => store.refresh());
 
 
-  
-  const pauseButton = gradioApp().querySelector<HTMLButtonElement>(
-    '#agent_scheduler_action_pause'
-  )!;
-  pauseButton.addEventListener('click', () => store.pauseQueue().then(notify));
+  //commt
+  // const pauseButton = gradioApp().querySelector<HTMLButtonElement>(
+  //   '#agent_scheduler_action_pause'
+  // )!;
+  // pauseButton.addEventListener('click', () => store.pauseQueue().then(notify));
 
   const resumeButton = gradioApp().querySelector<HTMLButtonElement>(
     '#agent_scheduler_action_resume'
@@ -671,18 +671,18 @@ function initPendingTab() {
     }
   });
 
-  // watch for queue status change
-  const updateUiState = (state: ReturnType<typeof store.getState>) => {
-    if (state.paused) {
-      pauseButton.classList.add('hide', 'hidden');
-      resumeButton.classList.remove('hide', 'hidden');
-    } else {
-      pauseButton.classList.remove('hide', 'hidden');
-      resumeButton.classList.add('hide', 'hidden');
-    }
-  };
-  store.subscribe(updateUiState); //订阅，如果store状态改变，则调用updateUiState
-  updateUiState(store.getState());
+  // // watch for queue status change
+  // const updateUiState = (state: ReturnType<typeof store.getState>) => {
+  //   if (state.paused) {
+  //     pauseButton.classList.add('hide', 'hidden');
+  //     resumeButton.classList.remove('hide', 'hidden');
+  //   } else {
+  //     pauseButton.classList.remove('hide', 'hidden');
+  //     resumeButton.classList.add('hide', 'hidden');
+  //   }
+  // };
+  // store.subscribe(updateUiState); //订阅，如果store状态改变，则调用updateUiState
+  // updateUiState(store.getState());
 
   let lastHighlightedRow: RowNode<Task> | null;
 
