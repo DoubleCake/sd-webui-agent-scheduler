@@ -520,21 +520,20 @@ def on_ui_tab(**_kwargs):
                                 elem_id=f"agent_scheduler_download_files",
                             )
                             html_log = gr.HTML(elem_id=f"agent_scheduler_html_log", elem_classes="html-log")
-
                             try:
                                 send_to_buttons = create_buttons(["txt2img", "img2img", "inpaint", "extras"])
                             except:
                                 pass
-                        selected_task = gr.Textbox(
-                            elem_id="agent_scheduler_history_selected_task",
-                            visible=False,
-                            show_label=False,
-                        )
-                        selected_task_id = gr.Textbox(
-                            elem_id="agent_scheduler_history_selected_image",
-                            visible=False,
-                            show_label=False,
-                        )
+                            selected_task = gr.Textbox(
+                                elem_id="agent_scheduler_history_selected_task",
+                                visible=False,
+                                show_label=False,
+                            )
+                            selected_image_id = gr.Textbox(
+                                elem_id="agent_scheduler_history_selected_image",
+                                visible=False,
+                                show_label=False,
+                            )
             with gr.Tab("上传模型",id =2, elem_id = "agent_scheduler_model_upload_tab"):
                 with gr.Row():
                         with gr.Row():
@@ -553,7 +552,8 @@ def on_ui_tab(**_kwargs):
                     passward= gr.Textbox(label="密码：")
                 btnVerfica=gr.Button(value="验证是否正确(如账户密码错误,将无法正确的查询流程)" ,variant="primary")
                 gr.HTML(value="当前账号暂未进行验证，请验证后再使用.")
-                
+
+
         # register event handlers
         
         model_file.upload(
