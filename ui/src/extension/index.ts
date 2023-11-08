@@ -65,6 +65,7 @@ declare global {
   function agent_scheduler_project_user_change(...args: any[]): any[];
 
   function appendContextMenuOption(selector: string, label: string, callback: () => void): void;
+  function modalSaveImage(event: Event): void;
   function verfyUserInfor(...args: any[]):void;
   // function verfyUserInfor(user:string,password:string,project:string ):void;
 }
