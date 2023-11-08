@@ -520,7 +520,7 @@ def on_ui_tab(**_kwargs):
                                 elem_id=f"agent_scheduler_download_files",
                             )
                             html_log = gr.HTML(elem_id=f"agent_scheduler_html_log", elem_classes="html-log")
-<<<<<<< HEAD
+
                             try:
                                 send_to_buttons = create_buttons(["txt2img", "img2img", "inpaint", "extras"])
                             except:
@@ -553,23 +553,7 @@ def on_ui_tab(**_kwargs):
                     passward= gr.Textbox(label="密码：")
                 btnVerfica=gr.Button(value="验证是否正确(如账户密码错误,将无法正确的查询流程)" ,variant="primary")
                 gr.HTML(value="当前账号暂未进行验证，请验证后再使用.")
-
-
-
-
-=======
-                            selected_task = gr.Textbox(
-                                elem_id="agent_scheduler_history_selected_task",
-                                visible=False,
-                                show_label=False,
-                            )
-                            selected_image_id = gr.Textbox(
-                                elem_id="agent_scheduler_history_selected_image",
-                                visible=False,
-                                show_label=False,
-                            )
->>>>>>> 99b2cafbc2b4a2fc93ffcabd56b0ff915396d1f1
-
+                
         # register event handlers
         
         model_file.upload(
