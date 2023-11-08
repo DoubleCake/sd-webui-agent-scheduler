@@ -283,6 +283,7 @@ const sharedGridOptions: GridOptions<Task> = {
       editable: false,
       valueFormatter: ({ value }: ValueFormatterParams<Task, number>) =>
         value != null ? new Date(value).toLocaleString(document.documentElement.lang) : '',
+        sortable: true,
     },
   ],
 
@@ -429,7 +430,7 @@ function initQueueHandler() {
     return "wupng_fail";
   };
 
-  const btnEnqueue = gradioApp().querySelector<HTMLButtonElement>('#txt2img_enqueue input')!;
+  const btnEnqueue = gradioApp().querySelector<HTMLButtonElement>('#txt2img_enqueue')!;
 
 
 
@@ -443,10 +444,10 @@ function initQueueHandler() {
     window.randomId = window.origRandomId;
 
     if (btnEnqueue != null) {
-      // btnEnqueue.innerText = 'Queued==='; 
-      btnEnqueue.innerText = '====插入队列中Queued==='; 
+      console.log("change queued button inter text")
+      btnEnqueue.innerText = '排队ing'; 
       setTimeout(() => { //延迟一段时间后执行修改名称
-        btnEnqueue.innerText = 'Enqueue';
+        btnEnqueue.innerText = '排队生成';
         if (!sharedStore.getState().uiAsTab) {
           if (sharedStore.getState().selectedTab === 'pending') {
             pendingStore.refresh();
@@ -469,13 +470,13 @@ function initQueueHandler() {
 
     res[2] = getUiCheckpoint(true);
     res[3] = randomId();
-    res[4] = get_tab_index('mode_img2img');
+    res[4] = get_tab_index('排队ing');
     window.randomId = window.origRandomId;
 
     if (btnImg2ImgEnqueue != null) {
-      btnImg2ImgEnqueue.innerText = 'Queued';
+      btnImg2ImgEnqueue.innerText = 'Queued-图生图';
       setTimeout(() => {
-        btnImg2ImgEnqueue.innerText = 'Enqueue';
+        btnImg2ImgEnqueue.innerText = '排队生成';
         if (!sharedStore.getState().uiAsTab) {
           if (sharedStore.getState().selectedTab === 'pending') {
             pendingStore.refresh();
@@ -649,6 +650,8 @@ function initPendingTab() {
   )!;
   refreshButton.addEventListener('click', () => store.refresh());
 
+
+  
   const pauseButton = gradioApp().querySelector<HTMLButtonElement>(
     '#agent_scheduler_action_pause'
   )!;
@@ -1060,7 +1063,6 @@ function initHistoryTab() {
     args[0]=user;
     args[1] = password;
     args[2] = project;
-    console.log("ubdex.tx"+args)
     store.verifyProjectAndCreatedBy(args[0], args[1], args[2]).then( notify);
     return args;
   }

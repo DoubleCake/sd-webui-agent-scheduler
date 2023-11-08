@@ -17,7 +17,8 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.exceptions import HTTPException
 import urllib
 
-from modules import shared, progress
+
+from modules import shared, progress, sd_models, sd_samplers
 from modules import scripts
 user_file = os.path.join(scripts.basedir(), "user_info.json")
 
