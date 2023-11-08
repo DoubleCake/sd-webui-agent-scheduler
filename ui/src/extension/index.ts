@@ -48,18 +48,11 @@ declare global {
   function create_submit_args(args: any[]): any[];
   function requestProgress(
     id: string,
-<<<<<<< HEAD
-    progressContainer: HTMLElement,
-    imagesContainer: HTMLElement,
-    onDone?: () => void,
-    onProgress?: (res: ProgressResponse) => void
-=======
     progressContainer: HTMLElement, //显示任务进度的元素容器
     imagesContainer: HTMLElement, //显示任务图片的html容器
     onDone?: () => void, //onDone的可选参数，当任务完成时执行的参数
     onProgress?: (res: ProgressResponse) => void, //在任务进度更新时，执行的res回调函数，该回调函数的输入对象是ProgressResponse
 
->>>>>>> devTable
   ): void;
   function onUiLoaded(callback: () => void): void;
   function notify(response: ResponseStatus): void;
@@ -72,12 +65,8 @@ declare global {
   function agent_scheduler_project_user_change(...args: any[]): any[];
 
   function appendContextMenuOption(selector: string, label: string, callback: () => void): void;
-<<<<<<< HEAD
-  function modalSaveImage(event: Event): void;
-=======
   function verfyUserInfor(...args: any[]):void;
   // function verfyUserInfor(user:string,password:string,project:string ):void;
->>>>>>> devTable
 }
 
 const sharedStore = createSharedStore({
@@ -884,15 +873,10 @@ function initPendingTab() {
       const searchInput = initSearchInput('#agent_scheduler_action_search'); //初始化gradio的text框，画上搜索图标
       searchInput.addEventListener(
         'keyup',
-<<<<<<< HEAD
         debounce(function () {
           api.setQuickFilter(this.value);
         }, 200)
       );
-=======
-        debounce(function () { api.setQuickFilter(this.value); }, 200)
-      ); //创建搜索框 输入完成后自动调整表格
->>>>>>> devTable
 
       //根据store.getState获取的内容更新表格的行数据
       const updateRowData = (state: ReturnType<typeof store.getState>) => {
